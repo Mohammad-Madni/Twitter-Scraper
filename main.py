@@ -7,6 +7,63 @@ import undetected_chromedriver as uc
 from selenium.webdriver.common.keys import Keys
 from datetime import datetime, timedelta
 import json
+import pickle
+import os
+
+
+def login_if_needed(driver):
+    try:
+        driver.find_element(By.XPATH, "//input[@placeholder='Search']")
+        print("Already logged in!")
+        return
+    except:
+        pass
+
+    if os.path.exists("twitter_cookies.pkl"):
+        print("Loading saved session...")
+        driver.get("https://x.com")
+        sleep(2)
+        with open("twitter_cookies.pkl", 'rb') as f:
+            cookies = pickle.load(f)
+            for cookie in cookies:
+                try:
+                    driver.add_cookie(cookie)
+                except:
+                    pass
+        driver.get("https://x.com/home")
+        sleep(5)
+
+        try:
+            driver.find_element(By.XPATH, "//input[@placeholder='Search']")
+            print("Session restored successfully!")
+            return
+        except:
+            print("Saved session expired, logging in fresh...")
+
+    print("Performing fresh login...")
+    WebDriverWait(driver, 40).until(
+        EC.presence_of_element_located((By.XPATH, "//input[@autocomplete='username']"))).send_keys(
+        "softwarepattern9@gmail.com")
+    driver.find_element(By.XPATH, "//span[contains(text(),'Next')]").click()
+    sleep(5)
+
+    try:
+        driver.find_element(By.XPATH, "//span[contains(text(),'Next')]")
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//input[@inputmode='text']"))).send_keys("software69857")
+        driver.find_element(By.XPATH, "//span[contains(text(),'Next')]").click()
+        sleep(5)
+    except:
+        pass
+
+    WebDriverWait(driver, 15).until(
+        EC.presence_of_element_located((By.XPATH, "//input[contains(@autocomplete,'assword')]"))).send_keys("#676F924c")
+    driver.find_element(By.XPATH, "//span[contains(text(),'Log in')]").click()
+    sleep(10)
+
+    with open("twitter_cookies.pkl", 'wb') as f:
+        pickle.dump(driver.get_cookies(), f)
+    print("Login successful! Session saved to twitter_cookies.pkl")
 
 
 def is_within_timeframe(tweet_datetime):
@@ -29,37 +86,15 @@ options.add_argument('--disable-blink-features=AutomationControlled')
 driver = uc.Chrome(options=options)
 
 driver.get("https://x.com/home")
+sleep(3)
 
-WebDriverWait(driver, 40).until(
-    EC.presence_of_element_located((By.XPATH, "//input[@autocomplete='username']"))
-).send_keys("softwarepattern9@gmail.com")
-
-driver.find_element(By.XPATH, "//span[contains(text(),'Next')]").click()
-sleep(5)
-
-try:
-    driver.find_element(By.XPATH, "//span[contains(text(),'Next')]")
-    print("Username verification required. Entering username...")
-    WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.XPATH, "//input[@inputmode='text']"))
-    ).send_keys("software69857")
-    driver.find_element(By.XPATH, "//span[contains(text(),'Next')]").click()
-    sleep(5)
-except:
-    print("No username verification needed.")
-
-WebDriverWait(driver, 15).until(
-    EC.presence_of_element_located((By.XPATH, "//input[contains(@autocomplete,'assword')]"))
-).send_keys("#676F924c")
-
-driver.find_element(By.XPATH, "//span[contains(text(),'Log in')]").click()
-sleep(10)
+login_if_needed(driver)
 
 search_box = WebDriverWait(driver, 20).until(
     EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Search']"))
 )
 
-search_query = "geonews_english"
+search_query = "ARYNEWSOFFICIAL"
 
 search_box.send_keys(search_query)
 search_box.send_keys(Keys.ENTER)
@@ -82,7 +117,7 @@ print("Scraping ALL tweets from last 4 months up to last night 12 AM...")
 print("=" * 80)
 
 # Currently it will run for 10 min's.
-while not should_stop and time() - scroll_start < 600:  # Here you can remove the time limit and make sure of scraper running for all 4 months by change removing >  and time() - scroll_start < 7200  < this line from condtion
+while not should_stop and time() - scroll_start < 300:  # Here you can remove the time limit and make sure of scraper running for all 4 months by change removing >  and time() - scroll_start < 7200  < this line from condtion
     articles = driver.find_elements(By.XPATH, "//article[@data-testid='tweet']")
 
     for article in articles:
