@@ -12,34 +12,7 @@ import os
 
 
 def login_if_needed(driver):
-    try:
-        driver.find_element(By.XPATH, "//input[@placeholder='Search']")
-        print("Already logged in!")
-        return
-    except:
-        pass
-
-    if os.path.exists("twitter_cookies.pkl"):
-        print("Loading saved session...")
-        driver.get("https://x.com")
-        sleep(2)
-        with open("twitter_cookies.pkl", 'rb') as f:
-            cookies = pickle.load(f)
-            for cookie in cookies:
-                try:
-                    driver.add_cookie(cookie)
-                except:
-                    pass
-        driver.get("https://x.com/home")
-        sleep(5)
-
-        try:
-            driver.find_element(By.XPATH, "//input[@placeholder='Search']")
-            print("Session restored successfully!")
-            return
-        except:
-            print("Saved session expired, logging in fresh...")
-
+    """Perform fresh login"""
     print("Performing fresh login...")
     WebDriverWait(driver, 40).until(
         EC.presence_of_element_located((By.XPATH, "//input[@autocomplete='username']"))).send_keys(
@@ -85,10 +58,30 @@ options.add_argument('--no-first-run')
 options.add_argument('--disable-blink-features=AutomationControlled')
 driver = uc.Chrome(options=options)
 
-driver.get("https://x.com/home")
-sleep(3)
+if os.path.exists("twitter_cookies.pkl"):
+    print("Found saved session, loading...")
+    driver.get("https://x.com")
+    sleep(2)
+    with open("twitter_cookies.pkl", 'rb') as f:
+        for cookie in pickle.load(f):
+            try:
+                driver.add_cookie(cookie)
+            except:
+                pass
+    driver.get("https://x.com/home")
+    sleep(5)
 
-login_if_needed(driver)
+    try:
+        driver.find_element(By.XPATH, "//input[@placeholder='Search']")
+        print("Session restored successfully!")
+    except:
+        print("Session expired, need fresh login...")
+        driver.get("https://x.com/home")
+        login_if_needed(driver)
+else:
+    print("No saved session found, logging in...")
+    driver.get("https://x.com/home")
+    login_if_needed(driver)
 
 search_box = WebDriverWait(driver, 20).until(
     EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Search']"))
@@ -117,7 +110,7 @@ print("Scraping ALL tweets from last 4 months up to last night 12 AM...")
 print("=" * 80)
 
 # Currently it will run for 10 min's.
-while not should_stop and time() - scroll_start < 300:  # Here you can remove the time limit and make sure of scraper running for all 4 months by change removing >  and time() - scroll_start < 7200  < this line from condtion
+while not should_stop and time() - scroll_start < 600:  # Here you can remove the time limit and make sure of scraper running for all 4 months by change removing >  and time() - scroll_start < 7200  < this line from condtion
     articles = driver.find_elements(By.XPATH, "//article[@data-testid='tweet']")
 
     for article in articles:
@@ -129,7 +122,6 @@ while not should_stop and time() - scroll_start < 300:  # Here you can remove th
 
             tweet_id = f"{tweet_text[:50]}_{tweet_datetime.isoformat()}"
 
-            # Skip if tweet is already processed
             if tweet_id in processed_tweets:
                 continue
 
