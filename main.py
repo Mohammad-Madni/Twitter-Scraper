@@ -58,14 +58,17 @@ sleep(10)
 search_box = WebDriverWait(driver, 20).until(
     EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Search']"))
 )
-search_box.send_keys("geonews_english")
+
+search_query = "geonews_english"
+
+search_box.send_keys(search_query)
 search_box.send_keys(Keys.ENTER)
 
 WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.LINK_TEXT, "People"))).click()
 sleep(2)
 
 WebDriverWait(driver, 20).until(
-    EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'@geonews_english')]"))
+    EC.presence_of_element_located((By.XPATH, f"//span[contains(text(),'@{search_query}')]"))
 ).click()
 sleep(5)
 
