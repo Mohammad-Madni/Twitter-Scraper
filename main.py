@@ -30,7 +30,6 @@ driver = uc.Chrome(options=options)
 
 driver.get("https://x.com/home")
 
-# Login process
 WebDriverWait(driver, 40).until(
     EC.presence_of_element_located((By.XPATH, "//input[@autocomplete='username']"))
 ).send_keys("softwarepattern9@gmail.com")
@@ -77,7 +76,8 @@ should_stop = False
 
 print("Scraping ALL tweets from last 4 months up to last night 12 AM...")
 
-while not should_stop:  # Here you can add timelimit just by adding 7200 mean 2 hour to run >> while not should_stop and time() - scroll_start < 7200:
+#Currently it will run for 10 min's.
+while not should_stop and time() - scroll_start < 600:  # Here you can remove the time limit and make sure of scraper running for all 4 months by change removing >  and time() - scroll_start < 7200  < this line from condtion
     articles = driver.find_elements(By.XPATH, "//article[@data-testid='tweet']")
 
     for article in articles:
