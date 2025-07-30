@@ -73,10 +73,12 @@ tweets = {}
 processed_tweets = set()
 scroll_start = time()
 should_stop = False
+tweet_counter = 0
 
 print("Scraping ALL tweets from last 4 months up to last night 12 AM...")
+print("=" * 80)
 
-#Currently it will run for 10 min's.
+# Currently it will run for 10 min's.
 while not should_stop and time() - scroll_start < 600:  # Here you can remove the time limit and make sure of scraper running for all 4 months by change removing >  and time() - scroll_start < 7200  < this line from condtion
     articles = driver.find_elements(By.XPATH, "//article[@data-testid='tweet']")
 
@@ -96,17 +98,22 @@ while not should_stop and time() - scroll_start < 600:  # Here you can remove th
             processed_tweets.add(tweet_id)
 
             if is_older_than_4_months(tweet_datetime):
-                print(f"Reached tweet older than 4 months: {tweet_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
+                print(f"\nReached tweet older than 4 months: {tweet_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
                 print("Stopping scraper as goal completed!")
                 should_stop = True
                 break
 
             if is_within_timeframe(tweet_datetime):
+                tweet_counter += 1
                 tweets[tweet_id] = {
                     "text": tweet_text,
                     "timestamp": tweet_datetime.strftime("%Y-%m-%d %H:%M:%S"),
                     "datetime_iso": tweet_datetime.isoformat()
                 }
+
+                print(f"{tweet_counter}. Time: {tweet_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
+                print(f"   Text: {tweet_text[:120]}{'...' if len(tweet_text) > 120 else ''}")
+                print("-" * 70)
 
         except Exception as e:
             continue
@@ -118,7 +125,8 @@ while not should_stop and time() - scroll_start < 600:  # Here you can remove th
     sleep(2)
 
     if len(tweets) % 50 == 0 and len(tweets) > 0:
-        print(f"Progress: {len(tweets)} tweets collected...")
+        print(f"\nProgress: {len(tweets)} tweets collected so far...")
+        print("-" * 70)
 
 tweet_list = list(tweets.values())
 tweet_list.sort(key=lambda x: x["datetime_iso"], reverse=True)
@@ -134,18 +142,8 @@ with open(filename, 'w', encoding='utf-8') as f:
 
 print(f"\nSCRAPING COMPLETED!")
 print(f"Total tweets collected: {len(tweet_list)}")
-print(f"Saved to: {filename}")
+print(f"All tweets saved in '{filename}'")
 print("=" * 80)
-
-for i, tweet in enumerate(tweet_list[:30], 1):
-    print(f"{i}. Time: {tweet['timestamp']}")
-    print(f"   Text: {tweet['text'][:120]}{'...' if len(tweet['text']) > 120 else ''}")
-    print("-" * 70)
-
-if len(tweet_list) > 30:
-    print(f"\nand {len(tweet_list) - 30} more tweets in the JSON file!")
-
-print(f"All {len(tweet_list)} tweets saved in '{filename}'")
 
 try:
     driver.quit()
